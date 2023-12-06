@@ -8,3 +8,9 @@ type Notification struct {
 	Description string `json:"description"`
 	Type        string `json:"Type"`
 }
+
+type NotificationPayload struct {
+	// Type -> email, sms, inapp
+	Type        string `json:"Type"`
+	Description string `json:"description"`
+}

@@ -1,14 +1,13 @@
 package main
 
 import (
-	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/routes"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	r := gin.Default()
-	config.Connect()
+	// config.Connect()
 
 	routes.UserRoute(r)
 
