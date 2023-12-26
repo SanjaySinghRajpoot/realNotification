@@ -2,15 +2,27 @@ package controller
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/SanjaySinghRajpoot/realNotification/models"
-	"github.com/SanjaySinghRajpoot/realNotification/utils"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
 )
 
 // Notification service
 func Notification(ctx *gin.Context) {
-	fmt.Println("working--- MNC")
+
+	// Create producer
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{
+		"bootstrap.servers": "localhost:9092",
+		"client.id":         "test",
+		"acks":              "all"})
+
+	if err != nil {
+		fmt.Printf("Failed to create producer: %s\n", err)
+		os.Exit(1)
+	}
+	defer producer.Close()
 
 	var notificationPayload models.NotificationPayload
 
@@ -18,23 +30,76 @@ func Notification(ctx *gin.Context) {
 
 	if notificationPayload.Type == "sms" {
 
-		smsStatus, checkSMS := utils.SendSMSNotification(notificationPayload.Description)
+		// Produce messages to the topic
+		topic := "sms"
+		message := "Hello, Kafka SMS test!"
 
-		if !checkSMS {
-			ctx.JSON(404, fmt.Sprintf("Something went wrong while sending an SMS - %v", smsStatus))
+		deliveryChan := make(chan kafka.Event)
+		err = producer.Produce(&kafka.Message{
+			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+			Value:          []byte(message),
+		}, deliveryChan)
+
+		if err != nil {
+			fmt.Printf("Failed to produce message: %v\n", err)
+		} else {
+			// Wait for delivery report
+			e := <-deliveryChan
+			m := e.(*kafka.Message)
+			if m.TopicPartition.Error != nil {
+				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
+			} else {
+				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+			}
 		}
-	} else if notificationPayload.Type == "email" {
-		emailStatus, checkEmail := utils.SendEmailNotification(notificationPayload.Description)
 
-		if !checkEmail {
-			ctx.JSON(404, fmt.Sprintf("Something went wrong while sending an Email - %v", emailStatus))
+	} else if notificationPayload.Type == "email" {
+		// Produce messages to the topic
+		topic := "email"
+		message := "Hello, Kafka email test!"
+
+		deliveryChan := make(chan kafka.Event)
+		err = producer.Produce(&kafka.Message{
+			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+			Value:          []byte(message),
+		}, deliveryChan)
+
+		if err != nil {
+			fmt.Printf("Failed to produce message: %v\n", err)
+		} else {
+			// Wait for delivery report
+			e := <-deliveryChan
+			m := e.(*kafka.Message)
+			if m.TopicPartition.Error != nil {
+				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
+			} else {
+				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+			}
 		}
 	} else if notificationPayload.Type == "inapp" {
-		emailStatus, checkEmail := utils.SendInappNotification(notificationPayload.Description)
+		// Produce messages to the topic
+		topic := "inapp"
+		message := "Hello, Kafka inapp test!"
 
-		if !checkEmail {
-			ctx.JSON(404, fmt.Sprintf("Something went wrong while sending an Inapp msg - %v", emailStatus))
+		deliveryChan := make(chan kafka.Event)
+		err = producer.Produce(&kafka.Message{
+			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+			Value:          []byte(message),
+		}, deliveryChan)
+
+		if err != nil {
+			fmt.Printf("Failed to produce message: %v\n", err)
+		} else {
+			// Wait for delivery report
+			e := <-deliveryChan
+			m := e.(*kafka.Message)
+			if m.TopicPartition.Error != nil {
+				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
+			} else {
+				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+			}
 		}
+
 	}
 
 }

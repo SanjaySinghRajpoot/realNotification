@@ -1,28 +1,107 @@
-package utils
+package main
 
-func SendSMSNotification(description string) (string, bool) {
+import (
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
-	// add your sms service here
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+)
 
-	msg := "SMS message was send successfully"
+func main() {
+	// Set up configuration
+	config := &kafka.ConfigMap{
+		"bootstrap.servers": "localhost:9092", // Replace with your Kafka broker address
+		"group.id":          "my-group",
+		"auto.offset.reset": "earliest",
+	}
 
-	return msg, true
-}
+	// 3 Different Consumers for three different functions
 
-func SendEmailNotification(description string) (string, bool) {
+	// Create consumer for SMS service
+	consumer, err := kafka.NewConsumer(config)
+	if err != nil {
+		panic(err)
+	}
+	defer consumer.Close()
 
-	// add your sms service here
+	// Subscribe to a topics
+	topics := []string{"sms"}
+	consumer.SubscribeTopics(topics, nil)
 
-	msg := "Email message was send successfully"
+	// Handle messages and shutdown signals
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
-	return msg, true
-}
+	run := true
+	for run {
+		select {
+		case sig := <-sigchan:
+			fmt.Printf("Caught signal %v: terminating\n", sig)
+			run = false
 
-func SendInappNotification(description string) (string, bool) {
+		default:
+			ev := consumer.Poll(100)
+			if ev == nil {
+				continue
+			}
 
-	// add your sms service here
+			switch e := ev.(type) {
+			case *kafka.Message:
+				fmt.Printf("Received message on topic %s: %s\n", *e.TopicPartition.Topic, string(e.Value))
 
-	msg := "Inapp message was send successfully"
+			case kafka.Error:
+				fmt.Fprintf(os.Stderr, "Error: %v\n", e)
+				run = false
 
-	return msg, true
+			default:
+				fmt.Printf("Ignored %v\n", e)
+			}
+		}
+	}
+
+	// -------------------------------------------
+
+	// Create consumer for Email
+	consumerEmail, err := kafka.NewConsumer(config)
+	if err != nil {
+		panic(err)
+	}
+	defer consumerEmail.Close()
+
+	// Subscribe to a topics
+	topicsEmail := []string{"email"}
+	consumerEmail.SubscribeTopics(topicsEmail, nil)
+
+	// Handle messages and shutdown signals
+	sigchanEmail := make(chan os.Signal, 1)
+	signal.Notify(sigchanEmail, syscall.SIGINT, syscall.SIGTERM)
+
+	runEmail := true
+	for runEmail {
+		select {
+		case sig := <-sigchanEmail:
+			fmt.Printf("Caught signal %v: terminating\n", sig)
+			run = false
+
+		default:
+			ev := consumerEmail.Poll(100)
+			if ev == nil {
+				continue
+			}
+
+			switch e := ev.(type) {
+			case *kafka.Message:
+				fmt.Printf("Received message on topic %s: %s\n", *e.TopicPartition.Topic, string(e.Value))
+
+			case kafka.Error:
+				fmt.Fprintf(os.Stderr, "Error: %v\n", e)
+				run = false
+
+			default:
+				fmt.Printf("Ignored %v\n", e)
+			}
+		}
+	}
 }
