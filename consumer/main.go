@@ -40,6 +40,7 @@ func main() {
 			run = false
 
 		default:
+			// time out of 100 millisecond
 			ev := consumer.Poll(100)
 			if ev == nil {
 				continue

@@ -32,12 +32,11 @@ func Notification(ctx *gin.Context) {
 
 		// Produce messages to the topic
 		topic := "sms"
-		message := "Hello, Kafka SMS test!"
 
 		deliveryChan := make(chan kafka.Event)
 		err = producer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte(message),
+			Value:          []byte(notificationPayload.Description),
 		}, deliveryChan)
 
 		if err != nil {
@@ -56,12 +55,11 @@ func Notification(ctx *gin.Context) {
 	} else if notificationPayload.Type == "email" {
 		// Produce messages to the topic
 		topic := "email"
-		message := "Hello, Kafka email test!"
 
 		deliveryChan := make(chan kafka.Event)
 		err = producer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte(message),
+			Value:          []byte(notificationPayload.Description),
 		}, deliveryChan)
 
 		if err != nil {
@@ -79,12 +77,11 @@ func Notification(ctx *gin.Context) {
 	} else if notificationPayload.Type == "inapp" {
 		// Produce messages to the topic
 		topic := "inapp"
-		message := "Hello, Kafka inapp test!"
 
 		deliveryChan := make(chan kafka.Event)
 		err = producer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte(message),
+			Value:          []byte(notificationPayload.Description),
 		}, deliveryChan)
 
 		if err != nil {
