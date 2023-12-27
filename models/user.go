@@ -15,3 +15,8 @@ type NotificationPayload struct {
 	Type        string `json:"type"`
 	Description string `json:"description"`
 }
+
+type NotificationValue struct {
+	ID          int    `json:"id"`
+	Description string `json:"description"`
+}

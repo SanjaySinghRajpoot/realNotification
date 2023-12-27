@@ -1,9 +1,12 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
@@ -28,15 +31,43 @@ func Notification(ctx *gin.Context) {
 
 	ctx.BindJSON(&notificationPayload)
 
+	// save the notification in the DB
+	notifyObj := models.Notification{
+		Type:        notificationPayload.Type,
+		Description: notificationPayload.Description,
+		State:       false,
+	}
+
+	res := config.DB.Create(&notifyObj)
+
+	fmt.Println("----------------------------------------------")
+	fmt.Println(notifyObj.Id)
+	fmt.Println("----------------------------------------------")
+
+	if res.Error != nil {
+		fmt.Printf("Failed to create block: %v", res.Error)
+	}
+
 	if notificationPayload.Type == "sms" {
 
 		// Produce messages to the topic
 		topic := "sms"
 
+		makeNotify := models.NotificationValue{
+			ID:          notifyObj.Id,
+			Description: notificationPayload.Description,
+		}
+
+		// Convert struct to bytes
+		notifyBytes, err := json.Marshal(makeNotify)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		deliveryChan := make(chan kafka.Event)
 		err = producer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte(notificationPayload.Description),
+			Value:          notifyBytes,
 		}, deliveryChan)
 
 		if err != nil {

@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/SanjaySinghRajpoot/realNotification/config"
+	"github.com/SanjaySinghRajpoot/realNotification/models"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
@@ -33,6 +37,7 @@ func main() {
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	run := true
+	var notifObj models.NotificationValue
 	for run {
 		select {
 		case sig := <-sigchan:
@@ -48,15 +53,21 @@ func main() {
 
 			switch e := ev.(type) {
 			case *kafka.Message:
-				fmt.Printf("Received message on topic %s: %s\n", *e.TopicPartition.Topic, string(e.Value))
+
+				err = json.Unmarshal(e.Value, &notifObj)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Printf("Received message on topic %s: %s\n", *e.TopicPartition.Topic, notifObj.Description)
 				messageType := e.TopicPartition.Topic
 				switch *messageType {
 				case "sms":
-					handleSMS(e)
+					handleSMS(e, notifObj.ID)
 				case "email":
-					handleEmail(e)
+					handleEmail(e, notifObj.ID)
 				case "inapp":
-					handleInapp(e)
+					handleInapp(e, notifObj.ID)
 				}
 
 			case kafka.Error:
@@ -70,14 +81,24 @@ func main() {
 	}
 }
 
-func handleSMS(e *kafka.Message) {
+func handleSMS(e *kafka.Message, notifID int) {
+
+	fmt.Println("-------------------------------")
+	fmt.Println(notifID)
+	res := config.DB.Exec("Update notifications SET state = false where id = ?", notifID)
+
+	if res.Error != nil {
+		fmt.Printf("Failed to create block: %v", res.Error)
+	}
+
+	// need to set the status of the notification to true in the DB
 	fmt.Printf("handleSMS %v\n", e)
 }
 
-func handleEmail(e *kafka.Message) {
+func handleEmail(e *kafka.Message, notifID int) {
 	fmt.Printf("handleEmail %v\n", e)
 }
 
-func handleInapp(e *kafka.Message) {
+func handleInapp(e *kafka.Message, notifID int) {
 	fmt.Printf("handleInapp %v\n", e)
 }

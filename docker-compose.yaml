@@ -1,15 +1,15 @@
 version: '3.8'
 services:
-  # db:
-  #   image: postgres
-  #   volumes:
-  #     - ./data/db:/var/lib/postgresql/data
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_PASSWORD=postgres
-  #     - POSTGRES_DB=notification
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=notification
   zooNotif:
     image: confluentinc/cp-zookeeper:7.3.2
     hostname: zooNotif
