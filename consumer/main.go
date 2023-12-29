@@ -14,6 +14,10 @@ import (
 )
 
 func main() {
+
+	// Connect to the postgres database
+	config.Connect()
+
 	// Set up configuration
 	config := &kafka.ConfigMap{
 		"bootstrap.servers": "localhost:9092", // Replace with your Kafka broker address
@@ -83,12 +87,15 @@ func main() {
 
 func handleSMS(e *kafka.Message, notifID int) {
 
-	fmt.Println("-------------------------------")
 	fmt.Println(notifID)
-	res := config.DB.Exec("Update notifications SET state = false where id = ?", notifID)
+
+	// Update the state of the notification based on service used
+	var updateNotification models.Notification
+
+	res := config.DB.Model(&updateNotification).Where("id = ?", notifID).Update("state", true)
 
 	if res.Error != nil {
-		fmt.Printf("Failed to create block: %v", res.Error)
+		fmt.Printf("Failed to update the Notification: %v", res.Error)
 	}
 
 	// need to set the status of the notification to true in the DB
@@ -96,9 +103,30 @@ func handleSMS(e *kafka.Message, notifID int) {
 }
 
 func handleEmail(e *kafka.Message, notifID int) {
+
+	// Update the state of the notification based on service used
+	var updateNotification models.Notification
+
+	res := config.DB.Model(&updateNotification).Where("id = ?", notifID).Update("state", true)
+
+	if res.Error != nil {
+		fmt.Printf("Failed to update the Notification: %v", res.Error)
+	}
+
 	fmt.Printf("handleEmail %v\n", e)
 }
 
 func handleInapp(e *kafka.Message, notifID int) {
+
+	// Update the state of the notification based on service used
+
+	var updateNotification models.Notification
+
+	res := config.DB.Model(&updateNotification).Where("id = ?", notifID).Update("state", true)
+
+	if res.Error != nil {
+		fmt.Printf("Failed to update the Notification: %v", res.Error)
+	}
+
 	fmt.Printf("handleInapp %v\n", e)
 }

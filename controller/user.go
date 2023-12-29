@@ -40,10 +40,6 @@ func Notification(ctx *gin.Context) {
 
 	res := config.DB.Create(&notifyObj)
 
-	fmt.Println("----------------------------------------------")
-	fmt.Println(notifyObj.Id)
-	fmt.Println("----------------------------------------------")
-
 	if res.Error != nil {
 		fmt.Printf("Failed to create block: %v", res.Error)
 	}
