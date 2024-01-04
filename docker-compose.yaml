@@ -10,6 +10,29 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=notification
+  producer:
+    container_name: api_producer
+    build: .
+    ports:
+      - 8080:8080
+    restart: always
+    volumes:
+      - api_volume:/usr/src/app/
+    depends_on:
+      - db
+    networks:
+      - fullstack
+  # consumer:
+  #     container_name: api_consumer
+  #     build: ./consumer
+  #     ports:
+  #       - 9092:9092
+  #     restart: always
+  #     volumes:
+  #       - api_volume:/usr/src/app/
+  #     depends_on:
+  #       - db
+
   zooNotif:
     image: confluentinc/cp-zookeeper:7.3.2
     hostname: zooNotif
@@ -45,3 +68,11 @@ services:
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
     depends_on:
       - zooNotif
+
+volumes:
+  database_dockerizing:
+  api_volume:
+
+networks:
+  fullstack:
+    driver: bridge
