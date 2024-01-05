@@ -16,7 +16,7 @@ func main() {
 	// start the cron job
 	cronJob := cron.New()
 
-	// Cron Job set up to run on Weekly basis
+	// Cron Job that will check for state=false for Notifications
 	cronJob.AddFunc("@every 10s", func() {
 		utils.CheckForNotificationState()
 	})
