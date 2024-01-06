@@ -1,7 +1,7 @@
 # Real Notification
 
 Real Notification is a robust and scalable notification service designed to deliver reliable performance. This project leverages a powerful tech stack, including Apache Kafka for efficient message queuing, Postgres for persistent storage of notifications, and Gin as a framework for handling incoming requests.
-
+![realNotification](https://github.com/SanjaySinghRajpoot/realNotification/assets/67458417/ae540187-db45-4a6a-ab44-2b7f7f769327)
 
 ## Features
 
