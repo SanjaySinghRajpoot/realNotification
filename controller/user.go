@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
+	"net/http"
 
 	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
@@ -23,7 +23,11 @@ func Notification(ctx *gin.Context) {
 
 	if err != nil {
 		fmt.Printf("Failed to create producer: %s\n", err)
-		os.Exit(1)
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
 	}
 	defer producer.Close()
 
@@ -42,6 +46,11 @@ func Notification(ctx *gin.Context) {
 
 	if res.Error != nil {
 		fmt.Printf("Failed to create block: %v", res.Error)
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": res.Error.Error(),
+		})
+		return
 	}
 
 	if notificationPayload.Type == "sms" {
@@ -68,12 +77,24 @@ func Notification(ctx *gin.Context) {
 
 		if err != nil {
 			fmt.Printf("Failed to produce message: %v\n", err)
+
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+
 		} else {
 			// Wait for delivery report
 			e := <-deliveryChan
 			m := e.(*kafka.Message)
 			if m.TopicPartition.Error != nil {
 				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
+
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"error": m.TopicPartition.Error.Error(),
+				})
+				return
+
 			} else {
 				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 			}
@@ -91,12 +112,22 @@ func Notification(ctx *gin.Context) {
 
 		if err != nil {
 			fmt.Printf("Failed to produce message: %v\n", err)
+
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
 		} else {
 			// Wait for delivery report
 			e := <-deliveryChan
 			m := e.(*kafka.Message)
 			if m.TopicPartition.Error != nil {
 				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"error": m.TopicPartition.Error.Error(),
+				})
+				return
+
 			} else {
 				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 			}
@@ -113,12 +144,21 @@ func Notification(ctx *gin.Context) {
 
 		if err != nil {
 			fmt.Printf("Failed to produce message: %v\n", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
 		} else {
 			// Wait for delivery report
 			e := <-deliveryChan
 			m := e.(*kafka.Message)
 			if m.TopicPartition.Error != nil {
 				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"error": m.TopicPartition.Error.Error(),
+				})
+				return
+
 			} else {
 				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 			}
@@ -126,4 +166,5 @@ func Notification(ctx *gin.Context) {
 
 	}
 
+	ctx.JSON(http.StatusOK, "Notification was delivered successfully")
 }

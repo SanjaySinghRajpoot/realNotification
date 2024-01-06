@@ -10,18 +10,18 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=notification
-  producer:
-    container_name: api_producer
-    build: .
-    ports:
-      - 8080:8080
-    restart: always
-    volumes:
-      - api_volume:/usr/src/app/
-    depends_on:
-      - db
-    networks:
-      - fullstack
+  # producer:
+  #   container_name: api_producer
+  #   build: .
+  #   ports:
+  #     - 8080:8080
+  #   restart: always
+  #   volumes:
+  #     - api_volume:/usr/src/app/
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - fullstack
   # consumer:
   #     container_name: api_consumer
   #     build: ./consumer
