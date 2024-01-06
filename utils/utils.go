@@ -4,12 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/gin-gonic/gin"
 )
+
+func HomepageHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "Welcome to Real notification"})
+}
 
 func CheckForNotificationState() {
 

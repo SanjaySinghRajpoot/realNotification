@@ -3,13 +3,14 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/SanjaySinghRajpoot/realNotification/controller"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
+	"github.com/SanjaySinghRajpoot/realNotification/utils"
 	"github.com/gin-gonic/gin"
 	"gotest.tools/v3/assert"
 )
@@ -22,12 +23,12 @@ func SetUpRouter() *gin.Engine {
 func TestHomepageHandler(t *testing.T) {
 	mockResponse := `{"message":"Welcome Real notification"}`
 	r := SetUpRouter()
-	r.GET("/", HomepageHandler)
+	r.GET("/", utils.HomepageHandler)
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	responseData, _ := ioutil.ReadAll(w.Body)
+	responseData, _ := io.ReadAll(w.Body)
 	assert.Equal(t, mockResponse, string(responseData))
 	assert.Equal(t, http.StatusOK, w.Code)
 }
