@@ -87,16 +87,18 @@ func main() {
 
 func handleSMS(e *kafka.Message, notifID int) {
 
+	// here we will the API endpoint
+
 	fmt.Println(notifID)
 
-	// Update the state of the notification based on service used
-	var updateNotification models.Notification
+	// // Update the state of the notification based on service used
+	// var updateNotification models.Notification
 
-	res := config.DB.Model(&updateNotification).Where("id = ?", notifID).Update("state", true)
+	// res := config.DB.Model(&updateNotification).Where("id = ?", notifID).Update("state", true)
 
-	if res.Error != nil {
-		fmt.Printf("Failed to update the Notification: %v", res.Error)
-	}
+	// if res.Error != nil {
+	// 	fmt.Printf("Failed to update the Notification: %v", res.Error)
+	// }
 
 	// need to set the status of the notification to true in the DB
 	fmt.Printf("handleSMS %v\n", e)

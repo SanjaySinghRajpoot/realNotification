@@ -5,9 +5,17 @@ import (
 	"github.com/SanjaySinghRajpoot/realNotification/routes"
 	"github.com/SanjaySinghRajpoot/realNotification/utils"
 	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"gopkg.in/robfig/cron.v2"
 )
 
+// @title 	Real Notification Service
+// @version	1.0
+// @description A Notification Service in Go using Gin framework
+
+// @host 	localhost:8080
+// @BasePath /
 func main() {
 
 	// Connect to the database
@@ -27,6 +35,10 @@ func main() {
 	r := gin.Default()
 
 	r.GET("/", utils.HomepageHandler)
+
+	// setting up the SWAAGGER URL
+	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	routes.UserRoute(r)
 

@@ -12,7 +12,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Notification service
+// @Summary Endpoint to accept all the notifications
+// @Description This endpoint will accept all the notifications from all the services
+// @Accept  json
+// @Produce  json
+// @Success 200 {string} string  "ok"
+// @Router /user/notification [POST]
 func Notification(ctx *gin.Context) {
 
 	// Create producer
