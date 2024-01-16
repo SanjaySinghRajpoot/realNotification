@@ -5,8 +5,8 @@ import (
 	"github.com/SanjaySinghRajpoot/realNotification/routes"
 	"github.com/SanjaySinghRajpoot/realNotification/utils"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"gopkg.in/robfig/cron.v2"
 )
 

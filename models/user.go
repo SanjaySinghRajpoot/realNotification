@@ -20,3 +20,8 @@ type NotificationValue struct {
 	ID          int    `json:"id"`
 	Description string `json:"description"`
 }
+
+type SMSpayload struct {
+	Notification_id int    `json:"notification_id"`
+	Message         string `json:"message"`
+}

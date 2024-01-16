@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -33,7 +35,8 @@ func main() {
 	defer consumer.Close()
 
 	// Subscribe to a topics
-	topics := []string{"sms", "email", "inapp"}
+	// topics := []string{"sms", "email", "inapp"}
+	topics := []string{"sms"}
 	consumer.SubscribeTopics(topics, nil)
 
 	// Handle messages and shutdown signals
@@ -87,10 +90,6 @@ func main() {
 
 func handleSMS(e *kafka.Message, notifID int) {
 
-	// here we will the API endpoint
-
-	fmt.Println(notifID)
-
 	// // Update the state of the notification based on service used
 	// var updateNotification models.Notification
 
@@ -101,7 +100,30 @@ func handleSMS(e *kafka.Message, notifID int) {
 	// }
 
 	// need to set the status of the notification to true in the DB
-	fmt.Printf("handleSMS %v\n", e)
+
+	url := "http://localhost:8082/sms"
+
+	payload := models.SMSpayload{
+		Notification_id: notifID,
+		Message:         string(e.Value),
+	}
+
+	jsonStr, err := json.Marshal(&payload)
+	if err != nil {
+		fmt.Println("Error while Marshalling:", err)
+		return
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
 }
 
 func handleEmail(e *kafka.Message, notifID int) {
