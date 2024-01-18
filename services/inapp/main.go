@@ -71,7 +71,7 @@ func main() {
 
 	r.GET("/", HomepageHandler)
 
-	r.POST("/mail", InappService)
+	r.POST("/inapp", InappService)
 
 	r.Run(":8084")
 }

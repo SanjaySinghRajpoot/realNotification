@@ -37,7 +37,7 @@ func main() {
 	r.GET("/", utils.HomepageHandler)
 
 	// setting up the SWAAGGER URL
-	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
+	url := ginSwagger.URL("http://localhost:8081/swagger/doc.json")
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	routes.UserRoute(r)
