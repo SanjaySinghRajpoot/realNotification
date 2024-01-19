@@ -1,19 +1,29 @@
-FROM golang:alpine
+FROM golang:alpine AS builder
 
-# Set the Current Working Directory inside the container
-WORKDIR /go/src/app/
+ENV PATH="/go/bin:${PATH}"
+ENV GO111MODULE=on
+ENV CGO_ENABLED=1
+ENV GOOS=linux
+ENV GOARCH=amd64
 
-# Copy everything from the current directory to the PWD(Present Working Directory) inside the container
+WORKDIR /go/src
+
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+RUN apk -U add ca-certificates
+RUN apk update && apk upgrade && apk add pkgconf git bash build-base sudo
+RUN git clone https://github.com/edenhill/librdkafka.git && cd librdkafka && ./configure --prefix /usr && make && make install
+
 COPY . .
 
-# Download all the dependencies
-RUN go mod download -x
+RUN go build -tags musl --ldflags "-extldflags -static" -o main .
 
-# Install compile daemon for hot reloading
-RUN go install -mod=mod github.com/githubnemo/CompileDaemon
+FROM scratch AS runner
 
-# Expose port 80 to the outside world
-EXPOSE 80
+COPY --from=builder /go/src/main /
 
-# Command to run the executable
-ENTRYPOINT CompileDaemon --build="go build main.go" --command="./main"
+EXPOSE 8081
+
+ENTRYPOINT ["./main"]

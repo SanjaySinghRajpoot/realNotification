@@ -2,6 +2,7 @@ version: '3.8'
 services:
   db:
     image: postgres
+    container_name: realNotification-db
     volumes:
       - ./data/db:/var/lib/postgresql/data
     ports:
@@ -10,28 +11,28 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=notification
-  # producer:
-  #   container_name: api_producer
-  #   build: .
-  #   ports:
-  #     - 8080:8080
-  #   restart: always
-  #   volumes:
-  #     - api_volume:/usr/src/app/
-  #   depends_on:
-  #     - db
-  #   networks:
-  #     - fullstack
-  # consumer:
-  #     container_name: api_consumer
-  #     build: ./consumer
-  #     ports:
-  #       - 9092:9092
-  #     restart: always
-  #     volumes:
-  #       - api_volume:/usr/src/app/
-  #     depends_on:
-  #       - db
+  sms-app:
+    container_name: sms-app
+    image: sms-image:latest
+    build: .
+    environment:
+      DATABASE_URL: "host=realNotification-db user=postgres password=postgres dbname=postgres sslmode=disable"
+    ports:
+      - "8082:8082"
+    depends_on:
+      - db
+  realnotif-app:
+    container_name: realnotif-app
+    image: realnotif_service:latest
+    build: .
+    environment:
+      DATABASE_URL: "host=realNotification-db user=postgres password=postgres dbname=postgres sslmode=disable"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - db
+      - zooNotif
+      - kafkaNotif
 
   zooNotif:
     image: confluentinc/cp-zookeeper:7.3.2
