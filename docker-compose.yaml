@@ -21,6 +21,26 @@ services:
       - "8082:8082"
     depends_on:
       - db
+  mail-app:
+    container_name: mail-app
+    image: mail-app:latest
+    build: .
+    environment:
+      DATABASE_URL: "host=realNotification-db user=postgres password=postgres dbname=postgres sslmode=disable"
+    ports:
+      - "8083:8083"
+    depends_on:
+      - db
+  inapp-app:
+    container_name: inapp-app
+    image: inapp-app:latest
+    build: .
+    environment:
+      DATABASE_URL: "host=realNotification-db user=postgres password=postgres dbname=postgres sslmode=disable"
+    ports:
+      - "8084:8084"
+    depends_on:
+      - db
   realnotif-app:
     container_name: realnotif-app
     image: realnotif_service:latest

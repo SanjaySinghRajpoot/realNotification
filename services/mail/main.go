@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -25,7 +26,8 @@ type Payload struct {
 var DB *gorm.DB
 
 func Connect() {
-	dsn := "host=localhost user=postgres password=postgres dbname=notification port=5432 sslmode=disable"
+	// dsn := "host=localhost user=postgres password=postgres dbname=notification port=5432 sslmode=disable"
+	dsn := os.Getenv("DATABASE_URL")
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
