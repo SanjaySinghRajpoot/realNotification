@@ -81,7 +81,7 @@ func Notification(ctx *gin.Context) {
 		}, deliveryChan)
 
 		if err != nil {
-			fmt.Printf("Failed to produce message: %v\n", err)
+			fmt.Printf("Failed to produce message 1: %v\n", err)
 
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
@@ -116,7 +116,7 @@ func Notification(ctx *gin.Context) {
 		}, deliveryChan)
 
 		if err != nil {
-			fmt.Printf("Failed to produce message: %v\n", err)
+			fmt.Printf("Failed to produce message 2: %v\n", err)
 
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
@@ -148,7 +148,7 @@ func Notification(ctx *gin.Context) {
 		}, deliveryChan)
 
 		if err != nil {
-			fmt.Printf("Failed to produce message: %v\n", err)
+			fmt.Printf("Failed to produce message 3: %v\n", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
 			})
@@ -172,4 +172,5 @@ func Notification(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, "Notification was delivered successfully")
+	return
 }

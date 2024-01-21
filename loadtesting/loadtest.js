@@ -30,17 +30,14 @@ export let options = {
 
 export default function () {
     const url = 'http://localhost:8081/user/notification';
-    const params = {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    };
   
     const data = {
       type: "sms",
       description: "load testing",
     };
-    check(http.post(url,data, params), {
+    check(http.post(url,JSON.stringify(data), {
+      headers: { 'Content-Type': 'application/json' },
+    }), {
       'status is 200': (r) => r.status == 200,
     }) || errorRate.add(1);
   

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -26,7 +25,9 @@ type SMSpayload struct {
 var DB *gorm.DB
 
 func Connect() {
-	dsn := os.Getenv("DATABASE_URL")
+	// dsn := os.Getenv("DATABASE_URL")
+	dsn := "host=localhost user=postgres password=postgres dbname=postgres sslmode=disable"
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -44,7 +45,7 @@ func SMSService(ctx *gin.Context) {
 
 	var payload SMSpayload
 
-	if err := ctx.ShouldBind(&payload); err != nil {
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"errors": fmt.Sprintf("%v", err)})
 		return
 	}
@@ -60,6 +61,11 @@ func SMSService(ctx *gin.Context) {
 	if res.Error != nil {
 		fmt.Printf("Failed to update the Notification: %v", res.Error)
 	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "SMS sent",
+	})
+	return
 }
 
 func main() {
