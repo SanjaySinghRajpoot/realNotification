@@ -8,6 +8,7 @@ import (
 
 	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
+	"github.com/SanjaySinghRajpoot/realNotification/utils"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
 )
@@ -58,10 +59,10 @@ func Notification(ctx *gin.Context) {
 		return
 	}
 
-	if notificationPayload.Type == "sms" {
+	if notificationPayload.Type == utils.SMS {
 
 		// Produce messages to the topic
-		topic := "sms"
+		topic := utils.SMS
 
 		makeNotify := models.NotificationValue{
 			ID:          notifyObj.Id,
@@ -105,9 +106,9 @@ func Notification(ctx *gin.Context) {
 			}
 		}
 
-	} else if notificationPayload.Type == "email" {
+	} else if notificationPayload.Type == utils.EMAIL {
 		// Produce messages to the topic
-		topic := "email"
+		topic := utils.EMAIL
 
 		deliveryChan := make(chan kafka.Event)
 		err = producer.Produce(&kafka.Message{
@@ -137,9 +138,9 @@ func Notification(ctx *gin.Context) {
 				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 			}
 		}
-	} else if notificationPayload.Type == "inapp" {
+	} else if notificationPayload.Type == utils.PUSH {
 		// Produce messages to the topic
-		topic := "inapp"
+		topic := utils.PUSH
 
 		deliveryChan := make(chan kafka.Event)
 		err = producer.Produce(&kafka.Message{
