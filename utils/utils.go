@@ -33,7 +33,7 @@ func CheckForNotificationState() {
 
 	var allNotification []models.Notification
 
-	res := config.DB.Where("state = false").Find(&allNotification)
+	res := config.DB.Where("state = false AND description !='' AND type !=''").Find(&allNotification)
 
 	if res != nil {
 		if res.RowsAffected == 0 {
@@ -41,10 +41,12 @@ func CheckForNotificationState() {
 			return
 		}
 
-		fmt.Println("Error unable to fetch the data from DB")
+		if res.Error != nil && res.RowsAffected != 0 {
+			log := fmt.Sprintf("Error unable to fetch the data from DB: %s", res.Error)
+			fmt.Println(log)
+			return
+		}
 	}
-
-	fmt.Println("cron is working")
 
 	for _, notifi := range allNotification {
 		// Produce messages to the topic
@@ -68,7 +70,7 @@ func CheckForNotificationState() {
 		}, deliveryChan)
 
 		if err != nil {
-			fmt.Printf("Failed to produce message: %v\n", err)
+			fmt.Printf("Failed to produce message 4: %v\n", err)
 		} else {
 			// Wait for delivery report
 			e := <-deliveryChan
