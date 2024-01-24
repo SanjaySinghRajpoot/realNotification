@@ -11,6 +11,18 @@ import (
 	"gopkg.in/robfig/cron.v2"
 )
 
+func CRONjob() {
+	// start the cron job
+	cronJob := cron.New()
+
+	// Cron Job that will check for state=false for Notifications
+	cronJob.AddFunc("@every 10s", func() {
+		utils.CheckForNotificationState()
+	})
+
+	cronJob.Start()
+}
+
 // @title 	Real Notification Service
 // @version	1.0
 // @description A Notification Service in Go using Gin framework
@@ -22,15 +34,8 @@ func main() {
 	// Connect to the database
 	config.Connect()
 
-	// start the cron job
-	cronJob := cron.New()
-
-	// Cron Job that will check for state=false for Notifications
-	cronJob.AddFunc("@every 10s", func() {
-		utils.CheckForNotificationState()
-	})
-
-	cronJob.Start()
+	// start the CRON JOB
+	CRONjob()
 
 	// Gin router
 	r := gin.Default()
@@ -38,13 +43,15 @@ func main() {
 	// adding rate limiter
 	r.Use(middleware.RateLimiter)
 
+	// Home Page endpoint
 	r.GET("/", utils.HomepageHandler)
+
+	// User Router for Notification Route
+	routes.UserRoute(r)
 
 	// setting up the SWAAGGER URL
 	url := ginSwagger.URL("http://localhost:8081/swagger/doc.json")
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
-
-	routes.UserRoute(r)
 
 	r.Run(":8081")
 }

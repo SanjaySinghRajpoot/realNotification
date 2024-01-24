@@ -5,17 +5,14 @@ Real Notification is a robust and scalable notification service designed to deli
 
 ## Features
 
-### 1. Scalable Architecture
-
-Real Notification boasts a scalable architecture, achieved through the use of Apache Kafka as a messaging queue and an MVC (Model-View-Controller) design pattern. This ensures that the system can handle varying loads of notifications efficiently.
-
-### 2. Docker Setup
-
-The project includes a Docker setup for both the database and the entire application. This facilitates seamless deployment and ensures consistent environments across different systems.
-
-### 3. Fast Performance
-
-Real Notification is engineered for fast performance, minimizing downtime even under heavy request loads. The combination of Apache Kafka for message queuing and the use of a lightweight framework like Gin ensures swift response times.
+- Utilize Apache Kafka as a robust messaging queue for efficient handling of heavy messages.
+- Employ Docker Compose for a comprehensive project setup.
+- Ensure swift response times with the lightweight Gin framework.
+- Implement an IP-based rate limiter to prevent spam requests.
+- Organize API endpoints using an MVC architecture.
+- Embrace a microservices architecture for all services.
+- Conduct load testing using k6.
+- Implement a CRON job to identify and resend failed notifications.
 
 ## Getting Started
 
