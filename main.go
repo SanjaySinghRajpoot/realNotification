@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/SanjaySinghRajpoot/realNotification/config"
+	"github.com/SanjaySinghRajpoot/realNotification/middleware"
 	"github.com/SanjaySinghRajpoot/realNotification/routes"
 	"github.com/SanjaySinghRajpoot/realNotification/utils"
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,7 @@ import (
 // @version	1.0
 // @description A Notification Service in Go using Gin framework
 
-// @host 	localhost:8080
+// @host 	localhost:8081
 // @BasePath /
 func main() {
 
@@ -33,6 +34,9 @@ func main() {
 
 	// Gin router
 	r := gin.Default()
+
+	// adding rate limiter
+	r.Use(middleware.RateLimiter)
 
 	r.GET("/", utils.HomepageHandler)
 
