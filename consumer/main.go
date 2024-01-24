@@ -12,6 +12,7 @@ import (
 
 	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
+	"github.com/SanjaySinghRajpoot/realNotification/utils"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
@@ -69,11 +70,11 @@ func main() {
 				fmt.Printf("Received message on topic %s: %s\n", *e.TopicPartition.Topic, notifObj.Description)
 				messageType := e.TopicPartition.Topic
 				switch *messageType {
-				case "sms":
+				case utils.SMS:
 					handleSMS(e, notifObj.ID)
-				case "email":
+				case utils.EMAIL:
 					handleEmail(e, notifObj.ID)
-				case "inapp":
+				case utils.PUSH:
 					handleInapp(e, notifObj.ID)
 				}
 
@@ -89,17 +90,6 @@ func main() {
 }
 
 func handleSMS(e *kafka.Message, notifID int) {
-
-	// // Update the state of the notification based on service used
-	// var updateNotification models.Notification
-
-	// res := config.DB.Model(&updateNotification).Where("id = ?", notifID).Update("state", true)
-
-	// if res.Error != nil {
-	// 	fmt.Printf("Failed to update the Notification: %v", res.Error)
-	// }
-
-	// need to set the status of the notification to true in the DB
 
 	url := "http://localhost:8082/sms"
 
@@ -128,15 +118,6 @@ func handleSMS(e *kafka.Message, notifID int) {
 
 func handleEmail(e *kafka.Message, notifID int) {
 
-	// Update the state of the notification based on service used
-	// var updateNotification models.Notification
-
-	// res := config.DB.Model(&updateNotification).Where("id = ?", notifID).Update("state", true)
-
-	// if res.Error != nil {
-	// 	fmt.Printf("Failed to update the Notification: %v", res.Error)
-	// }
-
 	url := "http://localhost:8083/mail"
 
 	payload := models.SMSpayload{
@@ -164,16 +145,6 @@ func handleEmail(e *kafka.Message, notifID int) {
 }
 
 func handleInapp(e *kafka.Message, notifID int) {
-
-	// Update the state of the notification based on service used
-
-	// var updateNotification models.Notification
-
-	// res := config.DB.Model(&updateNotification).Where("id = ?", notifID).Update("state", true)
-
-	// if res.Error != nil {
-	// 	fmt.Printf("Failed to update the Notification: %v", res.Error)
-	// }
 
 	url := "http://localhost:8084/inapp"
 
