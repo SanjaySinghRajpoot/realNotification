@@ -41,137 +41,101 @@ func Notification(ctx *gin.Context) {
 
 	ctx.BindJSON(&notificationPayload)
 
-	// save the notification in the DB
-	notifyObj := models.Notification{
-		Type:        notificationPayload.Type,
-		Description: notificationPayload.Description,
-		State:       false,
-	}
+	for _, userID := range notificationPayload.UserID {
 
-	res := config.DB.Create(&notifyObj)
-
-	if res.Error != nil {
-		fmt.Printf("Failed to create block: %v", res.Error)
-
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": res.Error.Error(),
-		})
-		return
-	}
-
-	if notificationPayload.Type == utils.SMS {
-
-		// Produce messages to the topic
-		topic := utils.SMS
-
-		makeNotify := models.NotificationValue{
-			ID:          notifyObj.Id,
+		// save the notification in the DB
+		notifyObj := models.Notification{
+			Type:        notificationPayload.Type,
+			UserID:      userID,
 			Description: notificationPayload.Description,
+			State:       false,
 		}
 
-		// Convert struct to bytes
-		notifyBytes, err := json.Marshal(makeNotify)
-		if err != nil {
-			log.Fatal(err)
-		}
+		res := config.DB.Create(&notifyObj)
 
-		deliveryChan := make(chan kafka.Event)
-		err = producer.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          notifyBytes,
-		}, deliveryChan)
-
-		if err != nil {
-			fmt.Printf("Failed to produce message 1: %v\n", err)
+		if res.Error != nil {
+			fmt.Printf("Failed to create block: %v", res.Error)
 
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
+				"error": res.Error.Error(),
 			})
 			return
-
-		} else {
-			// Wait for delivery report
-			e := <-deliveryChan
-			m := e.(*kafka.Message)
-			if m.TopicPartition.Error != nil {
-				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
-
-				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"error": m.TopicPartition.Error.Error(),
-				})
-				return
-
-			} else {
-				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
-			}
 		}
 
-	} else if notificationPayload.Type == utils.EMAIL {
-		// Produce messages to the topic
-		topic := utils.EMAIL
-
-		deliveryChan := make(chan kafka.Event)
-		err = producer.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte(notificationPayload.Description),
-		}, deliveryChan)
-
-		if err != nil {
-			fmt.Printf("Failed to produce message 2: %v\n", err)
-
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
-			return
-		} else {
-			// Wait for delivery report
-			e := <-deliveryChan
-			m := e.(*kafka.Message)
-			if m.TopicPartition.Error != nil {
-				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
-				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"error": m.TopicPartition.Error.Error(),
-				})
-				return
-
-			} else {
-				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
-			}
+		notificationKafkaObj := models.NotificationValue{
+			NotificationID: notifyObj.Id,
+			UserID:         userID,
+			Description:    notificationPayload.Description,
 		}
-	} else if notificationPayload.Type == utils.PUSH {
-		// Produce messages to the topic
-		topic := utils.PUSH
 
-		deliveryChan := make(chan kafka.Event)
-		err = producer.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte(notificationPayload.Description),
-		}, deliveryChan)
-
-		if err != nil {
-			fmt.Printf("Failed to produce message 3: %v\n", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
-			return
-		} else {
-			// Wait for delivery report
-			e := <-deliveryChan
-			m := e.(*kafka.Message)
-			if m.TopicPartition.Error != nil {
-				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
+		if notificationPayload.Type == utils.SMS {
+			msg, err := SendNotification(utils.SMS, notificationKafkaObj, producer)
+			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"error": m.TopicPartition.Error.Error(),
+					"error": err.Error(),
 				})
-				return
-
-			} else {
-				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 			}
+
+			ctx.JSON(http.StatusOK, msg)
+		} else if notificationPayload.Type == utils.EMAIL {
+			msg, err := SendNotification(utils.EMAIL, notificationKafkaObj, producer)
+
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"error": err.Error(),
+				})
+			}
+
+			ctx.JSON(http.StatusOK, msg)
+		} else if notificationPayload.Type == utils.PUSH {
+			msg, err := SendNotification(utils.PUSH, notificationKafkaObj, producer)
+
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"error": err.Error(),
+				})
+			}
+
+			ctx.JSON(http.StatusOK, msg)
 		}
 
 	}
 
-	ctx.JSON(http.StatusOK, "Notification was delivered successfully")
 	return
+}
+
+func SendNotification(Topic string, NotificationData models.NotificationValue, producer *kafka.Producer) (string, error) {
+
+	// Convert struct to bytes
+	notifyBytes, err := json.Marshal(NotificationData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	deliveryChan := make(chan kafka.Event)
+	err = producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &Topic, Partition: kafka.PartitionAny},
+		Value:          notifyBytes,
+	}, deliveryChan)
+
+	if err != nil {
+		msg := fmt.Sprintf("Failed to produce message 1: %v\n", err)
+
+		return msg, err
+
+	} else {
+		// Wait for delivery report
+		e := <-deliveryChan
+		m := e.(*kafka.Message)
+		if m.TopicPartition.Error != nil {
+			msg := fmt.Sprintf("Delivery failed: %v\n", m.TopicPartition.Error)
+
+			return msg, m.TopicPartition.Error
+
+		} else {
+			fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+		}
+	}
+
+	return "Message Delivered Successfully", nil
 }

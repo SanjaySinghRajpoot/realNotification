@@ -17,7 +17,7 @@ func CRONjob() {
 
 	// Cron Job that will check for state=false for Notifications
 	cronJob.AddFunc("@every 10s", func() {
-		utils.CheckForNotificationState()
+		// utils.CheckForNotificationState()
 	})
 
 	cronJob.Start()

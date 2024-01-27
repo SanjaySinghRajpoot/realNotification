@@ -17,9 +17,10 @@ type Notification struct {
 	State       bool   `json:"state" gorm:"default:false"`
 }
 
-type SMSpayload struct {
+type ServicePayload struct {
 	Notification_id int    `json:"notification_id"`
 	Message         string `json:"message"`
+	UserID          int    `json:"user_id"`
 }
 
 var DB *gorm.DB
@@ -43,7 +44,7 @@ func HomepageHandler(c *gin.Context) {
 
 func SMSService(ctx *gin.Context) {
 
-	var payload SMSpayload
+	var payload ServicePayload
 
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"errors": fmt.Sprintf("%v", err)})
@@ -56,7 +57,7 @@ func SMSService(ctx *gin.Context) {
 	var updateNotification Notification
 
 	// we need to get the ID from the payload
-	res := DB.Model(&updateNotification).Where("id = ?", payload.Notification_id).Update("state", true)
+	res := DB.Model(&updateNotification).Where("id = ? AND user_id = ?", payload.Notification_id, payload.UserID).Update("state", true)
 
 	if res.Error != nil {
 		fmt.Printf("Failed to update the Notification: %v", res.Error)
