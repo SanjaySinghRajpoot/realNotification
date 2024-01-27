@@ -40,7 +40,7 @@ func main() {
 	// Gin router
 	r := gin.Default()
 
-	// adding rate limiter
+	// adding rate limiter for all the routes
 	r.Use(middleware.RateLimiter)
 
 	// Home Page endpoint

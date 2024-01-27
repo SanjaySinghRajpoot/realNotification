@@ -10,9 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-//   dsn := "host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai"
-//   db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
 var DB *gorm.DB
 
 // use godot package to load/read the .env file and
@@ -30,7 +27,10 @@ func goDotEnvVariable(key string) string {
 }
 
 func Connect() {
-	dsn := os.Getenv("DATABASE_URL")
+	// dsn := os.Getenv("DATABASE_URL")
+	// dsn := os.Getenv("host=localhost user=postgres password=postgres dbname=postgres sslmode=disable")
+	dsn := "host=localhost user=postgres password=postgres dbname=postgres sslmode=disable"
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {

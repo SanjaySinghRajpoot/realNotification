@@ -11,49 +11,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=notification
-  sms-app:
-    container_name: sms-app
-    image: sms-image:latest
-    build: .
-    environment:
-      DATABASE_URL: "host=realNotification-db user=postgres password=postgres dbname=postgres sslmode=disable"
-    ports:
-      - "8082:8082"
-    depends_on:
-      - db
-  mail-app:
-    container_name: mail-app
-    image: mail-app:latest
-    build: .
-    environment:
-      DATABASE_URL: "host=realNotification-db user=postgres password=postgres dbname=postgres sslmode=disable"
-    ports:
-      - "8083:8083"
-    depends_on:
-      - db
-  inapp-app:
-    container_name: inapp-app
-    image: inapp-app:latest
-    build: .
-    environment:
-      DATABASE_URL: "host=realNotification-db user=postgres password=postgres dbname=postgres sslmode=disable"
-    ports:
-      - "8084:8084"
-    depends_on:
-      - db
-  realnotif-app:
-    container_name: realnotif-app
-    image: realnotif_service:latest
-    build: .
-    environment:
-      DATABASE_URL: "host=realNotification-db user=postgres password=postgres dbname=postgres sslmode=disable"
-    ports:
-      - "8081:8081"
-    depends_on:
-      - db
-      - zooNotif
-      - kafkaNotif
-
   zooNotif:
     image: confluentinc/cp-zookeeper:7.3.2
     hostname: zooNotif
@@ -64,7 +21,6 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_SERVERS: zooNotif:2888:3888
-
   kafkaNotif:
     image: confluentinc/cp-kafka:7.3.2
     hostname: kafkaNotif
