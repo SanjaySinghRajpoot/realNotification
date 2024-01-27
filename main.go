@@ -46,6 +46,9 @@ func main() {
 	// Home Page endpoint
 	r.GET("/", utils.HomepageHandler)
 
+	// Redis Cache Setup
+	utils.RedisClient = utils.SetUpRedis()
+
 	// User Router for Notification Route
 	routes.UserRoute(r)
 

@@ -21,27 +21,39 @@ import (
 // @Router /user/notification [POST]
 func Notification(ctx *gin.Context) {
 
-	// Create producer
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost:9092",
-		"client.id":         "test",
-		"acks":              "all"})
-
-	if err != nil {
-		fmt.Printf("Failed to create producer: %s\n", err)
-
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-	defer producer.Close()
-
 	var notificationPayload models.NotificationPayload
 
 	ctx.BindJSON(&notificationPayload)
 
 	for _, userID := range notificationPayload.UserID {
+
+		// check first in cache
+		msg, error := utils.GetRedisData(userID)
+		if error != nil {
+			fmt.Printf("Failed to Get the Redis Cache: %s", msg)
+
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": error.Error(),
+			})
+		}
+
+		if msg == notificationPayload.Description {
+			ctx.JSON(http.StatusOK, "This notification is already sent in the last 24 hours")
+			return
+		}
+
+		msg, error = utils.SetRedisData(userID, notificationPayload.Description, notificationPayload.Type)
+
+		if error != nil {
+
+			fmt.Printf("Failed to Set the Redis Cache: %s", msg)
+
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": error.Error(),
+			})
+
+			return
+		}
 
 		// save the notification in the DB
 		notifyObj := models.Notification{
@@ -61,6 +73,22 @@ func Notification(ctx *gin.Context) {
 			})
 			return
 		}
+
+		// Create producer -> move this to utils
+		producer, err := kafka.NewProducer(&kafka.ConfigMap{
+			"bootstrap.servers": "localhost:9092",
+			"client.id":         "test",
+			"acks":              "all"})
+
+		if err != nil {
+			fmt.Printf("Failed to create producer: %s\n", err)
+
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		defer producer.Close()
 
 		notificationKafkaObj := models.NotificationValue{
 			NotificationID: notifyObj.Id,

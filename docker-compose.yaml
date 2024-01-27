@@ -11,6 +11,14 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=notification
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes: 
+      - cache:/data
   zooNotif:
     image: confluentinc/cp-zookeeper:7.3.2
     hostname: zooNotif
@@ -49,6 +57,8 @@ services:
 volumes:
   database_dockerizing:
   api_volume:
+  cache:
+    driver: local
 
 networks:
   fullstack:
