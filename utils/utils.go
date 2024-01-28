@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
@@ -92,7 +93,7 @@ func CheckForNotificationState() {
 func SetUpRedis() *redis.Client {
 	return redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
-		Password: "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81",
+		Password: os.Getenv("PASSWORD"),
 		DB:       0,
 	})
 }
@@ -131,4 +132,30 @@ func GetRedisData(UserID int) (string, error) {
 	}
 
 	return redisObj.Description, nil
+}
+
+func SetIPAddress(IPaddr string, Count int) (string, error) {
+
+	ctx := context.Background()
+
+	err := RedisClient.Set(ctx, IPaddr, Count, 30*time.Minute).Err()
+
+	if err != nil {
+		return "Something went wrong", err
+	}
+
+	return "", nil
+}
+
+func GetIPAddress(IPaddr string) (int, error) {
+
+	ctx := context.Background()
+
+	cnt, err := RedisClient.Get(ctx, IPaddr).Int()
+
+	if err != nil {
+		return -1, err
+	}
+
+	return cnt, nil
 }
