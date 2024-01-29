@@ -90,12 +90,14 @@ func CheckForNotificationState() {
 	}
 }
 
-func SetUpRedis() *redis.Client {
+func SetUpRedis(password string) *redis.Client {
+
 	return redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
-		Password: os.Getenv("PASSWORD"),
+		Password: password,
 		DB:       0,
 	})
+
 }
 
 type RedisNotification struct {

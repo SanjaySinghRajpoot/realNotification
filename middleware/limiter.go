@@ -16,9 +16,7 @@ const (
 )
 
 var (
-	// update this with DB query
-	ipRequestsCounts = make(map[string]int)
-	mutex            = &sync.Mutex{}
+	mutex = &sync.Mutex{}
 )
 
 func RateLimiter(context *gin.Context) {

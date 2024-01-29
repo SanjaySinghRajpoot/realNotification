@@ -31,10 +31,6 @@ func Notification(ctx *gin.Context) {
 		msg, error := utils.GetRedisData(userID)
 		if error != nil {
 			fmt.Printf("Failed to Get the Redis Cache: %s", msg)
-
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": error.Error(),
-			})
 		}
 
 		if msg == notificationPayload.Description {
