@@ -100,18 +100,14 @@ func SetUpRedis(password string) *redis.Client {
 
 }
 
-type RedisNotification struct {
-	Description string `redis:"description"`
-	Type        string `redis:"type"`
-}
-
 func SetRedisData(UserID int, Description string, Type string) (string, error) {
 
 	ctx := context.Background()
 
-	stringID := fmt.Sprintf("%d", UserID)
+	// Unique key using userID and Description
+	stringID := fmt.Sprintf("%d+%s", UserID, Description)
 
-	err := RedisClient.HSet(ctx, stringID, RedisNotification{Description, Type}).Err()
+	err := RedisClient.Set(ctx, stringID, true, 30*time.Minute).Err()
 
 	if err != nil {
 		return "Something went wrong", err
@@ -120,20 +116,18 @@ func SetRedisData(UserID int, Description string, Type string) (string, error) {
 	return "", nil
 }
 
-func GetRedisData(UserID int) (string, error) {
+func GetRedisData(UserID int, Description string) (bool, error) {
 
 	ctx := context.Background()
 
-	stringID := fmt.Sprintf("%d", UserID)
+	stringID := fmt.Sprintf("%d+%s", UserID, Description)
 
-	var redisObj RedisNotification
-
-	err := RedisClient.HGetAll(ctx, stringID).Scan(&redisObj)
+	check, err := RedisClient.Get(ctx, stringID).Bool()
 	if err != nil {
-		return "Something went wrong", err
+		return false, err
 	}
 
-	return redisObj.Description, nil
+	return check, nil
 }
 
 func SetIPAddress(IPaddr string, Count int) (string, error) {

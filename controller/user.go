@@ -28,17 +28,17 @@ func Notification(ctx *gin.Context) {
 	for _, userID := range notificationPayload.UserID {
 
 		// check first in cache
-		msg, error := utils.GetRedisData(userID)
-		if error != nil {
-			fmt.Printf("Failed to Get the Redis Cache: %s", msg)
+		check, err := utils.GetRedisData(userID, notificationPayload.Description)
+		if err != nil {
+			fmt.Printf("Failed to Get the Redis Cache: %s", err.Error())
 		}
 
-		if msg == notificationPayload.Description {
+		if check {
 			ctx.JSON(http.StatusOK, "This notification is already sent in the last 24 hours")
 			return
 		}
 
-		msg, error = utils.SetRedisData(userID, notificationPayload.Description, notificationPayload.Type)
+		msg, error := utils.SetRedisData(userID, notificationPayload.Description, notificationPayload.Type)
 
 		if error != nil {
 
