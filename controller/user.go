@@ -1,15 +1,12 @@
 package controller
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
 	"github.com/SanjaySinghRajpoot/realNotification/utils"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
 )
 
@@ -77,7 +74,7 @@ func Notification(ctx *gin.Context) {
 		}
 
 		if notificationPayload.Type == utils.SMS {
-			msg, err := SendNotification(utils.SMS, notificationKafkaObj, utils.KafkaProducer)
+			msg, err := utils.SendNotification(utils.SMS, notificationKafkaObj, utils.KafkaProducer)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"error": err.Error(),
@@ -86,7 +83,7 @@ func Notification(ctx *gin.Context) {
 
 			ctx.JSON(http.StatusOK, msg)
 		} else if notificationPayload.Type == utils.EMAIL {
-			msg, err := SendNotification(utils.EMAIL, notificationKafkaObj, utils.KafkaProducer)
+			msg, err := utils.SendNotification(utils.EMAIL, notificationKafkaObj, utils.KafkaProducer)
 
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -96,7 +93,7 @@ func Notification(ctx *gin.Context) {
 
 			ctx.JSON(http.StatusOK, msg)
 		} else if notificationPayload.Type == utils.PUSH {
-			msg, err := SendNotification(utils.PUSH, notificationKafkaObj, utils.KafkaProducer)
+			msg, err := utils.SendNotification(utils.PUSH, notificationKafkaObj, utils.KafkaProducer)
 
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -110,43 +107,4 @@ func Notification(ctx *gin.Context) {
 	}
 
 	return
-}
-
-func SendNotification(Topic string, NotificationData models.NotificationValue, producer *kafka.Producer) (string, error) {
-
-	defer producer.Close()
-
-	// Convert struct to bytes
-	notifyBytes, err := json.Marshal(NotificationData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	deliveryChan := make(chan kafka.Event)
-	err = producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &Topic, Partition: kafka.PartitionAny},
-		Value:          notifyBytes,
-	}, deliveryChan)
-
-	if err != nil {
-		msg := fmt.Sprintf("Failed to produce message 1: %v\n", err)
-
-		return msg, err
-
-	} else {
-
-		// Wait for delivery report
-		e := <-deliveryChan
-		m := e.(*kafka.Message)
-		if m.TopicPartition.Error != nil {
-			msg := fmt.Sprintf("Delivery failed: %v\n", m.TopicPartition.Error)
-
-			return msg, m.TopicPartition.Error
-
-		} else {
-			fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
-		}
-	}
-
-	return "Message Delivered Successfully", nil
 }

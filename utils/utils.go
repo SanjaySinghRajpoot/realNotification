@@ -22,6 +22,43 @@ func HomepageHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Welcome to Real notification"})
 }
 
+func SendNotification(Topic string, NotificationData models.NotificationValue, producer *kafka.Producer) (string, error) {
+
+	// Convert struct to bytes
+	notifyBytes, err := json.Marshal(NotificationData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	deliveryChan := make(chan kafka.Event)
+	err = producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &Topic, Partition: kafka.PartitionAny},
+		Value:          notifyBytes,
+	}, deliveryChan)
+
+	if err != nil {
+		msg := fmt.Sprintf("Failed to produce message 1: %v\n", err)
+
+		return msg, err
+
+	} else {
+
+		// Wait for delivery report
+		e := <-deliveryChan
+		m := e.(*kafka.Message)
+		if m.TopicPartition.Error != nil {
+			msg := fmt.Sprintf("Delivery failed: %v\n", m.TopicPartition.Error)
+
+			return msg, m.TopicPartition.Error
+
+		} else {
+			fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+		}
+	}
+
+	return "Message Delivered Successfully", nil
+}
+
 func CheckForNotificationState() {
 
 	var allNotification []models.Notification
@@ -34,10 +71,6 @@ func CheckForNotificationState() {
 			return
 		}
 
-		fmt.Println("---------------------------------------")
-		fmt.Println(res.RowsAffected)
-		fmt.Println("---------------------------------------")
-
 		if res.Error != nil && res.RowsAffected != 0 {
 			log := fmt.Sprintf("Error unable to fetch the data from DB: %s", res.Error)
 			fmt.Println(log)
@@ -45,39 +78,21 @@ func CheckForNotificationState() {
 		}
 	}
 
-	for _, notifi := range allNotification {
+	for _, notification := range allNotification {
 		// Produce messages to the topic
-		topic := notifi.Type
+		topic := notification.Type
 
 		makeNotify := models.NotificationValue{
-			NotificationID: notifi.Id,
-			UserID:         notifi.UserID,
-			Description:    notifi.Description,
+			NotificationID: notification.Id,
+			UserID:         notification.UserID,
+			Description:    notification.Description,
 		}
 
-		// Convert struct to bytes
-		notifyBytes, err := json.Marshal(makeNotify)
+		msg, err := SendNotification(topic, makeNotify, KafkaProducer)
 		if err != nil {
-			log.Fatal(err)
-		}
-
-		deliveryChan := make(chan kafka.Event)
-		err = KafkaProducer.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          notifyBytes,
-		}, deliveryChan)
-
-		if err != nil {
-			fmt.Printf("Failed to produce message 4: %v\n", err)
-		} else {
-			// Wait for delivery report
-			e := <-deliveryChan
-			m := e.(*kafka.Message)
-			if m.TopicPartition.Error != nil {
-				fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
-			} else {
-				fmt.Printf("Delivered message to topic %s [%d] at offset %v\n", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
-			}
+			log := fmt.Sprintf("Unable to send Failed Notification from CRON %s", msg)
+			fmt.Println(log)
+			return
 		}
 	}
 }
