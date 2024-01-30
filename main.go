@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -37,6 +38,14 @@ func main() {
 
 	// Redis Cache Setup
 	utils.RedisClient = utils.SetUpRedis(password)
+
+	var err error
+	utils.KafkaProducer, err = utils.InitializeProducer()
+
+	if err != nil {
+		fmt.Printf("Failed to create producer: %s\n", err.Error())
+		return
+	}
 
 	// adding rate limiter for all the routes
 	// r.Use(middleware.RateLimiter)

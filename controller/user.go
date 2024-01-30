@@ -30,7 +30,7 @@ func Notification(ctx *gin.Context) {
 		// check first in cache
 		check, err := utils.GetRedisData(userID, notificationPayload.Description)
 		if err != nil {
-			fmt.Printf("Failed to Get the Redis Cache: %s", err.Error())
+			fmt.Printf("Failed to Get the Redis Cache, Setting the Cache: %s", err)
 		}
 
 		if check {
@@ -70,22 +70,6 @@ func Notification(ctx *gin.Context) {
 			return
 		}
 
-		// Create producer -> move this to utils
-		producer, err := kafka.NewProducer(&kafka.ConfigMap{
-			"bootstrap.servers": "localhost:9092",
-			"client.id":         "test",
-			"acks":              "all"})
-
-		if err != nil {
-			fmt.Printf("Failed to create producer: %s\n", err)
-
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-		defer producer.Close()
-
 		notificationKafkaObj := models.NotificationValue{
 			NotificationID: notifyObj.Id,
 			UserID:         userID,
@@ -93,7 +77,7 @@ func Notification(ctx *gin.Context) {
 		}
 
 		if notificationPayload.Type == utils.SMS {
-			msg, err := SendNotification(utils.SMS, notificationKafkaObj, producer)
+			msg, err := SendNotification(utils.SMS, notificationKafkaObj, utils.KafkaProducer)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"error": err.Error(),
@@ -102,7 +86,7 @@ func Notification(ctx *gin.Context) {
 
 			ctx.JSON(http.StatusOK, msg)
 		} else if notificationPayload.Type == utils.EMAIL {
-			msg, err := SendNotification(utils.EMAIL, notificationKafkaObj, producer)
+			msg, err := SendNotification(utils.EMAIL, notificationKafkaObj, utils.KafkaProducer)
 
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -112,7 +96,7 @@ func Notification(ctx *gin.Context) {
 
 			ctx.JSON(http.StatusOK, msg)
 		} else if notificationPayload.Type == utils.PUSH {
-			msg, err := SendNotification(utils.PUSH, notificationKafkaObj, producer)
+			msg, err := SendNotification(utils.PUSH, notificationKafkaObj, utils.KafkaProducer)
 
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -129,6 +113,8 @@ func Notification(ctx *gin.Context) {
 }
 
 func SendNotification(Topic string, NotificationData models.NotificationValue, producer *kafka.Producer) (string, error) {
+
+	defer producer.Close()
 
 	// Convert struct to bytes
 	notifyBytes, err := json.Marshal(NotificationData)
@@ -148,6 +134,7 @@ func SendNotification(Topic string, NotificationData models.NotificationValue, p
 		return msg, err
 
 	} else {
+
 		// Wait for delivery report
 		e := <-deliveryChan
 		m := e.(*kafka.Message)

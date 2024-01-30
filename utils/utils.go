@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/SanjaySinghRajpoot/realNotification/config"
@@ -17,24 +16,13 @@ import (
 )
 
 var RedisClient *redis.Client
+var KafkaProducer *kafka.Producer
 
 func HomepageHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Welcome to Real notification"})
 }
 
 func CheckForNotificationState() {
-
-	// Create producer
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost:9092",
-		"client.id":         "test",
-		"acks":              "all"})
-
-	if err != nil {
-		fmt.Printf("Failed to create producer: %s\n", err)
-		os.Exit(1)
-	}
-	defer producer.Close()
 
 	var allNotification []models.Notification
 
@@ -45,6 +33,10 @@ func CheckForNotificationState() {
 			fmt.Println("No Notification found with False State")
 			return
 		}
+
+		fmt.Println("---------------------------------------")
+		fmt.Println(res.RowsAffected)
+		fmt.Println("---------------------------------------")
 
 		if res.Error != nil && res.RowsAffected != 0 {
 			log := fmt.Sprintf("Error unable to fetch the data from DB: %s", res.Error)
@@ -70,7 +62,7 @@ func CheckForNotificationState() {
 		}
 
 		deliveryChan := make(chan kafka.Event)
-		err = producer.Produce(&kafka.Message{
+		err = KafkaProducer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 			Value:          notifyBytes,
 		}, deliveryChan)
@@ -107,7 +99,7 @@ func SetRedisData(UserID int, Description string, Type string) (string, error) {
 	// Unique key using userID and Description
 	stringID := fmt.Sprintf("%d+%s", UserID, Description)
 
-	err := RedisClient.Set(ctx, stringID, true, 30*time.Minute).Err()
+	err := RedisClient.Set(ctx, stringID, true, 3*time.Hour).Err()
 
 	if err != nil {
 		return "Something went wrong", err
@@ -120,6 +112,7 @@ func GetRedisData(UserID int, Description string) (bool, error) {
 
 	ctx := context.Background()
 
+	// Making unique key
 	stringID := fmt.Sprintf("%d+%s", UserID, Description)
 
 	check, err := RedisClient.Get(ctx, stringID).Bool()
@@ -154,4 +147,19 @@ func GetIPAddress(IPaddr string) (int, error) {
 	}
 
 	return cnt, nil
+}
+
+func InitializeProducer() (*kafka.Producer, error) {
+
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{
+		"bootstrap.servers": "localhost:9092",
+		"client.id":         "test",
+		"acks":              "all"})
+
+	if err != nil {
+		fmt.Printf("Failed to create producer: %s\n", err)
+		return nil, err
+	}
+
+	return producer, nil
 }

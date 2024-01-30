@@ -15,6 +15,7 @@ Real Notification is a robust and scalable notification service designed to deli
 - Embrace a microservices architecture for all services.
 - Conducted load testing using k6.
 - Implement a CRON job to identify and resend failed notifications.
+- Integrated Redis Cache for checking repeated Notifications
 
 ## Getting Started
 
