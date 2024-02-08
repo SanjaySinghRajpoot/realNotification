@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -21,20 +20,42 @@ type Notification struct {
 type Payload struct {
 	Notification_id int    `json:"notification_id"`
 	Message         string `json:"message"`
+	UserID          int    `json:"user_id"`
 }
 
 var DB *gorm.DB
+var DB1 *gorm.DB
 
 func Connect() {
-	// dsn := "host=localhost user=postgres password=postgres dbname=notification port=5432 sslmode=disable"
-	dsn := os.Getenv("DATABASE_URL")
+	// dsn := os.Getenv("DATABASE_URL")
+	// dsn := os.Getenv("host=localhost user=postgres password=postgres dbname=postgres sslmode=disable")
+	dsn := "host=localhost user=postgres password=postgres dbname=postgres sslmode=disable"
+
+	dsn1 := "host=localhost port=5433 user=postgres password=postgres dbname=postgres sslmode=disable"
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		panic(err)
 	}
 
+	db1, err := gorm.Open(postgres.Open(dsn1), &gorm.Config{})
+
+	if err != nil {
+		panic(err)
+	}
+
 	DB = db
+	DB1 = db1
+}
+
+func GetDB(userId int) *gorm.DB {
+
+	if userId%2 == 0 {
+		return DB
+	}
+
+	return DB1
 }
 
 func HomepageHandler(c *gin.Context) {
@@ -55,8 +76,8 @@ func MailService(ctx *gin.Context) {
 	// Update the state of the notification based on service used
 	var updateNotification Notification
 
-	// we need to get the ID from the payload
-	res := DB.Model(&updateNotification).Where("id = ?", payload.Notification_id).Update("state", true)
+	useDB := GetDB(int(payload.UserID))
+	res := useDB.Model(&updateNotification).Where("id = ? AND user_id = ?", payload.Notification_id, payload.UserID).Update("state", true)
 
 	if res.Error != nil {
 		fmt.Printf("Failed to update the Notification: %v", res.Error)

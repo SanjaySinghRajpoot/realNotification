@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 var RedisClient *redis.Client
@@ -177,4 +178,13 @@ func InitializeProducer() (*kafka.Producer, error) {
 	}
 
 	return producer, nil
+}
+
+func GetDB(userId int) *gorm.DB {
+
+	if userId%2 == 0 {
+		return config.DB
+	}
+
+	return config.DB1
 }

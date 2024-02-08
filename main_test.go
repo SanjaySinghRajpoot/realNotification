@@ -21,7 +21,7 @@ func SetUpRouter() *gin.Engine {
 }
 
 func TestHomepageHandler(t *testing.T) {
-	mockResponse := `{"message":"Welcome Real notification"}`
+	mockResponse := `{"message":"Welcome to Real notification"}`
 	r := SetUpRouter()
 	r.GET("/", utils.HomepageHandler)
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -38,6 +38,10 @@ func TestNotification(t *testing.T) {
 	r := SetUpRouter()
 
 	r.POST("/user/notification", controller.Notification)
+
+	userId := make([]int, 0)
+
+	userId = append(userId, 1)
 
 	notification := models.NotificationPayload{
 		Type:        "sms",

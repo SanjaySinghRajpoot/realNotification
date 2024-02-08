@@ -11,6 +11,20 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=notification
+  db-1:
+    image: postgres
+    container_name: realNotification-db-1
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    expose:
+      - "5433"
+    ports:
+      - "5433:5433"
+    command: -p 5433
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=notification1
   cache:
     image: redis:6.2-alpine
     restart: always

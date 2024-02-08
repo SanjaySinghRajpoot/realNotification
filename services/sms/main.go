@@ -24,10 +24,14 @@ type ServicePayload struct {
 }
 
 var DB *gorm.DB
+var DB1 *gorm.DB
 
 func Connect() {
 	// dsn := os.Getenv("DATABASE_URL")
+	// dsn := os.Getenv("host=localhost user=postgres password=postgres dbname=postgres sslmode=disable")
 	dsn := "host=localhost user=postgres password=postgres dbname=postgres sslmode=disable"
+
+	dsn1 := "host=localhost port=5433 user=postgres password=postgres dbname=postgres sslmode=disable"
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
@@ -35,7 +39,23 @@ func Connect() {
 		panic(err)
 	}
 
+	db1, err := gorm.Open(postgres.Open(dsn1), &gorm.Config{})
+
+	if err != nil {
+		panic(err)
+	}
+
 	DB = db
+	DB1 = db1
+}
+
+func GetDB(userId int) *gorm.DB {
+
+	if userId%2 == 0 {
+		return DB
+	}
+
+	return DB1
 }
 
 func HomepageHandler(c *gin.Context) {
@@ -56,8 +76,9 @@ func SMSService(ctx *gin.Context) {
 	// Update the state of the notification based on service used
 	var updateNotification Notification
 
-	// we need to get the ID from the payload
-	res := DB.Model(&updateNotification).Where("id = ? AND user_id = ?", payload.Notification_id, payload.UserID).Update("state", true)
+	useDB := GetDB(int(payload.UserID))
+
+	res := useDB.Model(&updateNotification).Where("id = ? AND user_id = ?", payload.Notification_id, payload.UserID).Update("state", true)
 
 	if res.Error != nil {
 		fmt.Printf("Failed to update the Notification: %v", res.Error)
@@ -66,7 +87,6 @@ func SMSService(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "SMS sent",
 	})
-	return
 }
 
 func main() {

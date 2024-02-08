@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
 	"github.com/SanjaySinghRajpoot/realNotification/utils"
 	"github.com/gin-gonic/gin"
@@ -48,6 +47,8 @@ func Notification(ctx *gin.Context) {
 			return
 		}
 
+		useDB := utils.GetDB(userID)
+
 		// save the notification in the DB
 		notifyObj := models.Notification{
 			Type:        notificationPayload.Type,
@@ -56,7 +57,7 @@ func Notification(ctx *gin.Context) {
 			State:       false,
 		}
 
-		res := config.DB.Create(&notifyObj)
+		res := useDB.Create(&notifyObj)
 
 		if res.Error != nil {
 			fmt.Printf("Failed to create block: %v", res.Error)
