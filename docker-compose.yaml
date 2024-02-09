@@ -25,6 +25,60 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=notification1
+  main-app:
+    container_name: main-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: "host=realNotification-db port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"
+      DATABASE_URL_1: "host=realNotification-db-1 port=5433 user=postgres password=postgres dbname=postgres sslmode=disable"
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - cache
+      - db-1
+      - zooNotif
+      - kafkaNotif
+  main-app-2:
+    container_name: main-app-2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: "host=realNotification-db port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"
+      DATABASE_URL_1: "host=realNotification-db-1 port=5433 user=postgres password=postgres dbname=postgres sslmode=disable"
+    ports:
+      - "8080:8081"
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - cache
+      - db-1
+      - zooNotif
+      - kafkaNotif
+  main-app-3:
+    container_name: main-app-3
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: "host=realNotification-db port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"
+      DATABASE_URL_1: "host=realNotification-db-1 port=5433 user=postgres password=postgres dbname=postgres sslmode=disable"
+    ports:
+      - "8079:8081"
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - cache
+      - db-1
+      - zooNotif
+      - kafkaNotif
   cache:
     image: redis:6.2-alpine
     restart: always
