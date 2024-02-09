@@ -34,7 +34,7 @@ func main() {
 	// Home Page endpoint
 	r.GET("/", utils.HomepageHandler)
 
-	password := EnvVariable("PASSWORD")
+	password := "12345678"
 
 	// Redis Cache Setup
 	utils.RedisClient = utils.SetUpRedis(password)
