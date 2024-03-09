@@ -33,6 +33,10 @@ To get started with Real Notification, follow these steps:
 4. **Run the Application**: Start the application using `go run main.go` or as per your preferred deployment method.
 
 
+## Monitoring 
+![Screenshot from 2024-03-09 11-08-03](https://github.com/SanjaySinghRajpoot/realNotification/assets/67458417/bb25edb9-2e70-4006-a2d1-8e93b131a85a)
+
+
 ## Contributing
 
 We welcome contributions in the form of bug reports, feature requests, or pull requests.
