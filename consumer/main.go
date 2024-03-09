@@ -12,7 +12,6 @@ import (
 
 	"github.com/SanjaySinghRajpoot/realNotification/config"
 	"github.com/SanjaySinghRajpoot/realNotification/models"
-	"github.com/SanjaySinghRajpoot/realNotification/utils"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 

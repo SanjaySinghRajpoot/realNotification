@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/SanjaySinghRajpoot/realNotification/config"
+	"github.com/SanjaySinghRajpoot/realNotification/middleware"
 	"github.com/SanjaySinghRajpoot/realNotification/routes"
 	"github.com/SanjaySinghRajpoot/realNotification/utils"
 	"github.com/gin-gonic/gin"
@@ -30,6 +31,10 @@ func main() {
 
 	// Gin router
 	r := gin.Default()
+
+	// Prometheus middleware
+	p := middleware.NewPrometheus("gin")
+	p.Use(r)
 
 	// Home Page endpoint
 	r.GET("/", utils.HomepageHandler)
