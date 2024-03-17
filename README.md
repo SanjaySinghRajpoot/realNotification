@@ -34,6 +34,11 @@ To get started with Real Notification, follow these steps:
 
 
 ## Monitoring 
+- Before spinning up Prometheus & Grafana for monitoring, replace the HOST_IP variable (under monitoring/prometheus/config.yml) with your machine IP.
+- Run the command `docker-compose up` inside the monitoring folder
+- Once the containers - Prometheus & Grafana are up, visit http://localhost:3000 on browser for Grafana dashboard.
+Default credentials for Grafana: username - 'admin' , password - 'admin'
+Once logged into Grafana, visit settings to select prometheus data source as target to view the dashboard.
 ![Screenshot from 2024-03-09 11-08-03](https://github.com/SanjaySinghRajpoot/realNotification/assets/67458417/bb25edb9-2e70-4006-a2d1-8e93b131a85a)
 
 
